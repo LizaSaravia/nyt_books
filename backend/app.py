@@ -9,7 +9,6 @@ from tenacity import retry, stop_after_attempt, wait_fixed
 
 app = FastAPI(title="Integración NYT - Books Service")
 
-# Configurar CORS para permitir el acceso desde cualquier origen
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -37,7 +36,7 @@ async def fetch_nyt_books(list_type: str = "hardcover-fiction"):
         response.raise_for_status()  # Lanza excepción si la petición falla
         data = response.json()
         logger.info("Datos obtenidos del NYT para la lista: %s", list_type)
-        # Extraer los detalles de cada libro. Cada entrada en results tiene una clave "book_details"
+        # Extraer los detalles de cada libro.
         books = []
         for entry in data.get("results", []):
             details = entry.get("book_details", [])
