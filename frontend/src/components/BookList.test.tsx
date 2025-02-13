@@ -22,7 +22,7 @@ describe('BookList Component', () => {
     expect(screen.getByText(/Test Author/i)).toBeInTheDocument();
     expect(screen.getByText(/Test Description/i)).toBeInTheDocument();
 
-    // Se verifica que el enlace a Amazon contiene el título codificado
+    // Verifica que el enlace a Amazon contenga el título codificado
     const amazonLink = screen.getByText(/Ver en Amazon/i);
     expect(amazonLink).toHaveAttribute(
       'href',
