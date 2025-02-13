@@ -1,4 +1,3 @@
-// src/components/BookList.test.tsx
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import BookList from './BookList';
