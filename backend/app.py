@@ -3,13 +3,13 @@ import asyncio
 from typing import List, Dict
 
 import httpx
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 app = FastAPI(title="Integración NYT - Books Service")
 
-# Comunicación con el frontend
+# Configurar CORS para permitir el acceso desde cualquier origen
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,55 +21,36 @@ app.add_middleware(
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("nyt_integration")
 
-# Simulación de almacenamiento en memoria
-BOOKS_DATA: List[Dict] = []
-
-
-# Función que integra con el API del NYT
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
-async def fetch_nyt_books():
-    logger.info("Intentando conectar con el API del NYT...")
-    # Reemplazar con url real
+async def fetch_nyt_books(list_type: str = "hardcover-fiction"):
+    """
+    Llama a la API de NYT para obtener la lista de best sellers de acuerdo a list_type.
+    """
+    logger.info("Intentando conectar con el API del NYT para la lista: %s", list_type)
     url = "https://api.nytimes.com/svc/books/v3/lists.json"
-    params = {"api-key": "ce5DXwvXL79iSg3ajeg79L5h4DJ4JZXd"}
+    params = {
+        "list": list_type,
+        "api-key": "ce5DXwvXL79iSg3ajeg79L5h4DJ4JZXd"  
+    }
     async with httpx.AsyncClient() as client:
         response = await client.get(url, params=params)
-        response.raise_for_status()  # Si falla, se lanzará una excepción y se reintentará.
+        response.raise_for_status()  # Lanza excepción si la petición falla
         data = response.json()
-        logger.info("Datos obtenidos del NYT")
-        return data.get("results", {}).get("books", [])
+        logger.info("Datos obtenidos del NYT para la lista: %s", list_type)
+        # Extraer los detalles de cada libro. Cada entrada en results tiene una clave "book_details"
+        books = []
+        for entry in data.get("results", []):
+            details = entry.get("book_details", [])
+            if details:
+                books.append(details[0])
+        return books
 
-
-async def update_books_data():
-    global BOOKS_DATA
-    try:
-        books = await fetch_nyt_books()
-        BOOKS_DATA = books 
-        logger.info(f"Se actualizaron {len(books)} libros desde el NYT")
-    except Exception as e:
-        logger.error(f"Error al obtener datos del NYT: {e}")
-
-
-# Tarea en segundo plano
-async def periodic_book_update():
-    while True:
-        await update_books_data()
-        await asyncio.sleep(60 * 10)  # Actualiza cada 10 minutos
-
-
-# Evento de inicio de la aplicación para lanzar la tarea en background
-@app.on_event("startup")
-async def startup_event():
-    # Inicialmente actualizamos la data
-    await update_books_data()
-    # Ejecutamos la tarea en background sin bloquear el servidor
-    asyncio.create_task(periodic_book_update())
-
-
-# Endpoint que retorna los libros actuales
+# Endpoint que retorna los libros actuales de acuerdo al género (lista)
 @app.get("/books", response_model=List[Dict])
-async def get_books(genre: str = None):
-    if genre:
-        filtered_books = [book for book in BOOKS_DATA if genre.lower() in book.get("description", "").lower()]
-        return filtered_books
-    return BOOKS_DATA
+async def get_books(genre: str = "hardcover-fiction"):
+    """
+    Si se recibe un parámetro 'genre', se usa ese valor como nombre de la lista;
+    de lo contrario, se usa "hardcover-fiction" por defecto.
+    """
+    books = await fetch_nyt_books(list_type=genre)
+    return books
