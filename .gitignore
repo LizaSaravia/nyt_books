@@ -1,15 +1,63 @@
-# Python
+# ====================
+# Archivos y carpetas de Python
+# ====================
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Entornos virtuales
 env/
 venv/
+ENV/
+*.venv/
 
-# Node / React
+# Archivos de configuración del IDE (VSCode, PyCharm, etc.)
+.vscode/
+.idea/
+
+# Archivos de log
+*.log
+logs/
+
+# ====================
+# Archivos y carpetas de Node.js / React
+# ====================
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Carpetas de build y distribución
 build/
+dist/
+
+# Archivos de entorno para React
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# Otros
+# ====================
+# Archivos y carpetas del sistema operativo
+# ====================
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
 
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ====================
+# Otras configuraciones
+# ====================
+coverage/
